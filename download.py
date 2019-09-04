@@ -93,31 +93,36 @@ def download_folder(service, folder_id, location, folder_name):
     total = len(result)
     if total == 0:
         print colored('Folder is empty!', 'red')
-        sys.exit()
     else:
         print colored('START DOWNLOADING', 'yellow')
-    current = 1
-    for item in result:
-        file_id = item[u'id']
-        filename = no_accent_vietnamese(item[u'name'])
-        mime_type = item[u'mimeType']
-        print '- ', colored(filename, 'cyan'), colored(mime_type, 'cyan'), '({}/{})'.format(current, total)
-        if mime_type == 'application/vnd.google-apps.folder':
-            download_folder(service, file_id, location, filename)
-        elif not os.path.isfile('{}{}'.format(location, filename)):
-            download_file(service, file_id, location, filename)
-        else:
-            remote_size = item[u'size']
-            local_size = os.path.getsize('{}{}'.format(location, filename))
-            if (str(remote_size) == str(local_size)):
-                print colored('File existed!', 'magenta')
+        current = 1
+        for item in result:
+            file_id = item[u'id']
+            filename = no_accent_vietnamese(item[u'name'])
+            mime_type = item[u'mimeType']
+            print '- ', colored(filename, 'cyan'), colored(mime_type, 'cyan'), '({}/{})'.format(current, total)
+            if mime_type == 'application/vnd.google-apps.folder':
+                download_folder(service, file_id, location, filename)
+            elif not os.path.isfile('{}{}'.format(location, filename)):
+                try:
+                    download_file(service, file_id, location, filename)
+                except:
+                    print "An error occurred while downloading the file"
             else:
-                print colored('Local File corrupted', 'red')
-                os.remove('{}{}'.format(location, filename))
-                download_file(service, file_id, location, filename)
-        current += 1
-        percent = float((current-1))/float(total)*100
-        print colored("%.2f percent completed!" % percent,'green')
+                remote_size = item[u'size']
+                local_size = os.path.getsize('{}{}'.format(location, filename))
+                if (str(remote_size) == str(local_size)):
+                    print colored('File existed!', 'magenta')
+                else:
+                    print colored('Local File corrupted', 'red')
+                    os.remove('{}{}'.format(location, filename))
+                    try:
+                        download_file(service, file_id, location, filename)
+                    except:
+                        print "An error occurred while downloading the file"
+            current += 1
+            percent = float((current-1))/float(total)*100
+            print colored("%.2f percent completed!" % percent,'green')
 
 
 def download_file(service, file_id, location, filename):
